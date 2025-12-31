@@ -9,12 +9,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 	
-	@ExceptionHandler(value = {GlobalCustomeExceptions.class})
+	@ExceptionHandler(value = {GlobalCustomExceptions.class})
 	public ResponseEntity<Object> handleGlobalException
-	(GlobalCustomeExceptions globalCustomeExceptions){
+	(GlobalCustomExceptions globalCustomExceptions){
 		GlobalException globalException = new GlobalException
-				(globalCustomeExceptions.getMessage(),
-					globalCustomeExceptions.getCause(), HttpStatus.NOT_FOUND);
+				(globalCustomExceptions.getMessage(),
+						globalCustomExceptions.getCause(), HttpStatus.NOT_FOUND);
 		
 		return new ResponseEntity<>(globalException, HttpStatus.NOT_FOUND);
 		

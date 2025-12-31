@@ -61,12 +61,5 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
 
-
-
-        //TODO: Validate the Token
-
-
-
-        //TODO: set to spring context
     }
 }

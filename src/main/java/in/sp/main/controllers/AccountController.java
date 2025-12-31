@@ -26,7 +26,7 @@ public class AccountController {
 	
 	@PostMapping
 	public Account createCustomerAccount(@RequestBody Account account) {
-		return accountService.createAccunt(account);
+		return accountService.createAccount(account);
 	}
 	
 	@GetMapping("/{id}")
@@ -45,7 +45,7 @@ public class AccountController {
 	@DeleteMapping("/{id}")
 	public String deleteAccountById(@PathVariable int id) {
 		accountService.deleteAccountByID(id);
-		return "Account Deleted Succesffuly";
+		return "Account Deleted Successfully";
 	}
 	
 	//Updating full object and save it 
@@ -55,14 +55,14 @@ public class AccountController {
 	}
 	
 	@PutMapping("/withdraw/{id}/{amount}")
-	public String withdraAmount(@PathVariable int id, @PathVariable double amount) {
+	public String withdrawAmount(@PathVariable int id, @PathVariable double amount) {
 		return accountService.withdrawAmount(id, amount);
 	}
 	
-	@PutMapping("/deposite/{id}/{amount}")
-	public ResponseEntity<Object> depositeAmount(@PathVariable int id, @PathVariable double amount) {
+	@PutMapping("/deposit/{id}/{amount}")
+	public ResponseEntity<Object> depositAmount(@PathVariable int id, @PathVariable double amount) {
 		return ResponseHandler.responseBuilder("Cash Deposited Successfully",
-				HttpStatus.OK, accountService.depositeAmount(id, amount));
+				HttpStatus.OK, accountService.depositAmount(id, amount));
 		
 	}
 	

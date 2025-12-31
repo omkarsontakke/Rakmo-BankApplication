@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 
 public interface AccountService {
-	public Account createAccunt(Account account);
+	public Account createAccount(Account account);
 
 	public Optional<Account> getAccountByID(int id);
 
@@ -19,10 +19,10 @@ public interface AccountService {
 
 	public Account updateAccount(int id, Account account);
 
-	public String withdrawAmount(int id, double WithdraAmount);
+	public String withdrawAmount(int id, double WithdrawAmount);
 
 
-	public String depositeAmount(int id, double depositeAmount);
+	public String depositAmount(int id, double depositAmount);
 	
 	public boolean validateCustomer(int id);
 

@@ -36,7 +36,7 @@ class AccountServiceImplementationTest {
         account.setCustomer_id(7);
 
         Mockito.when(accountRepository.save(account)).thenReturn(account);
-        Account addAccount =  accountServiceImplementation.createAccunt(account);
+        Account addAccount =  accountServiceImplementation.createAccount(account);
 
         Assertions.assertEquals(7, addAccount.getId());
 
