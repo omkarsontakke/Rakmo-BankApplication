@@ -1,0 +1,9 @@
+What is Unit Test:
+    - A Unit test is the smallest part of your code, such as individual methods or classes,
+    to ensure they work as expected
+
+Why Unit Testing is important?
+    1.Fast Feedback
+    2.Early Bug Detection
+    3.Easier to maintain
+    4.Increase the confidence
