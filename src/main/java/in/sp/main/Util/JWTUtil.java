@@ -26,6 +26,7 @@ public class JWTUtil {
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
+                .setIssuer("Omkar Sontakke")
                 .compact();
     }
 
