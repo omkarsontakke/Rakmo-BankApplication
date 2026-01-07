@@ -37,7 +37,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)  // must disable for POST in Postman
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/generateToken/authenticate","/api/account/deposite/**").permitAll()
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/generateToken/authenticate").permitAll()
                         .anyRequest().authenticated()
                 );
                 http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

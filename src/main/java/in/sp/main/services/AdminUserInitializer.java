@@ -17,23 +17,23 @@ public class AdminUserInitializer {
 
             System.out.println(userRepository.findByUsername("admin").isEmpty());
             Users admin = new Users();
-            if (userRepository.findByUsername("admin").isEmpty()) {
-
-                admin.setUsername("allied");
-                admin.setPassword(passwordEncoder.encode("allied123")); // Securely store password
-                admin.setRole("ROLE_ADMIN");
-
-                userRepository.save(admin);
-                System.out.println("Default admin user created!");
-            }
-//            if (userRepository.findByUsername("user").isEmpty()) {
+//            if (userRepository.findByUsername("admin").isEmpty()) {
+//
 //                admin.setUsername("omkar");
-//                admin.setPassword(passwordEncoder.encode("rakmo")); // Securely store password
-//                admin.setRole("ROLE_USER");
+//                admin.setPassword(passwordEncoder.encode("omkar123")); // Securely store password
+//                admin.setRole("ROLE_ADMIN");
 //
 //                userRepository.save(admin);
-//                System.out.println("Default user created!");
+//                System.out.println("Default admin user created!");
 //            }
+            if (userRepository.findByUsername("user").isEmpty()) {
+                admin.setUsername("omkar");
+                admin.setPassword(passwordEncoder.encode("rakmo")); // Securely store password
+                admin.setRole("ROLE_USER");
+
+                userRepository.save(admin);
+                System.out.println("Default user created!");
+            }
 
         };
     }

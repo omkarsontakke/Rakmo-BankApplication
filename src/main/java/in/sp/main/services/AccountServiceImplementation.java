@@ -68,6 +68,10 @@ public class AccountServiceImplementation implements AccountService {
 	@Transactional
 	@Override
 	public String withdrawAmount(int id, double withdrawAmount) {
+
+		if(withdrawAmount < 0){
+			return "Please Enter positive Amount for withdrawal";
+		}
 		
 		Account getExistCustomerObj = accountRepository.findById(id).get();
 
