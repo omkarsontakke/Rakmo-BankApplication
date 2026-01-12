@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/api/account")
 public class AccountController {
@@ -55,12 +57,12 @@ public class AccountController {
 	}
 	
 	@PutMapping("/withdraw/{id}/{amount}")
-	public String withdrawAmount(@PathVariable int id, @PathVariable double amount) {
+	public String withdrawAmount(@PathVariable int id, @PathVariable BigDecimal amount) {
 		return accountService.withdrawAmount(id, amount);
 	}
 	
 	@PutMapping("/deposit/{id}/{amount}")
-	public ResponseEntity<Object> depositAmount(@PathVariable int id, @PathVariable double amount) {
+	public ResponseEntity<Object> depositAmount(@PathVariable int id, @PathVariable BigDecimal amount) {
 		return ResponseHandler.responseBuilder("Cash Deposited Successfully",
 				HttpStatus.OK, accountService.depositAmount(id, amount));
 		

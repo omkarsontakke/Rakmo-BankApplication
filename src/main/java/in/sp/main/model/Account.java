@@ -1,11 +1,15 @@
 package in.sp.main.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Entity
 @Table
@@ -23,7 +27,8 @@ public class Account {
 	private String accountType;
 	
 	@Column
-	private double balance;
+	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	private BigDecimal balance;
 	
 	@Column
 	private String accountStatus;
@@ -61,12 +66,12 @@ public class Account {
 		this.accountType = accountType;
 	}
 
-	public double getBalance() {
+	public BigDecimal getBalance() {
 		return balance;
 	}
 
-	public void setBalance(double balance) {
-		this.balance = balance;
+	public void setBalance(BigDecimal balance) {
+		this.balance = balance.setScale(2, RoundingMode.UP);
 	}
 
 	public String getAccountStatus() {

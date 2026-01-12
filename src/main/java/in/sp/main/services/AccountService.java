@@ -1,5 +1,6 @@
 package in.sp.main.services;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,10 +20,10 @@ public interface AccountService {
 
 	public Account updateAccount(int id, Account account);
 
-	public String withdrawAmount(int id, double WithdrawAmount);
+	public String withdrawAmount(int id, BigDecimal WithdrawAmount);
 
 
-	public String depositAmount(int id, double depositAmount);
+	public String depositAmount(int id, BigDecimal depositAmount);
 	
 	public boolean validateCustomer(int id);
 

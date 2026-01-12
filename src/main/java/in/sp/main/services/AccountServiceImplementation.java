@@ -1,5 +1,6 @@
 package in.sp.main.services;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,9 +68,9 @@ public class AccountServiceImplementation implements AccountService {
 	// Method for withdraw amount from the existing account
 	@Transactional
 	@Override
-	public String withdrawAmount(int id, double withdrawAmount) {
+	public String withdrawAmount(int id, BigDecimal withdrawAmount) {
 
-		if(withdrawAmount < 0){
+		if(withdrawAmount.compareTo(BigDecimal.ZERO) < 0){
 			return "Please Enter positive Amount for withdrawal";
 		}
 		
@@ -78,15 +79,16 @@ public class AccountServiceImplementation implements AccountService {
 		if (validateCustomer(id))
 			throw new GlobalCustomExceptions("Account Not Exist");
 
-		double currentBalance = getExistCustomerObj.getBalance();
+		BigDecimal currentBalance = getExistCustomerObj.getBalance();
 
-		if ((withdrawAmount > currentBalance) || (currentBalance == 0) ) {
+		if (withdrawAmount.compareTo(currentBalance) > 0 || currentBalance.compareTo(BigDecimal.ZERO) == 0) {
 			return "Insufficient Balance";
-		}else if(withdrawAmount == 0) {
+		} else if (withdrawAmount.compareTo(BigDecimal.ZERO) == 0) {
 			return "Please Enter valid Amount";
 		}
-		double newBalance = currentBalance - withdrawAmount;
-		getExistCustomerObj.setBalance(Math.round(newBalance));
+//		BigDecimal newBalance = currentBalance - withdrawAmount;
+		BigDecimal newBalance = currentBalance.subtract(withdrawAmount);
+		getExistCustomerObj.setBalance(newBalance);
 		accountRepository.save(getExistCustomerObj);
 		return "WithdrawAmount : " + withdrawAmount + " \n" + "New Balance : " + newBalance;
 	}
@@ -94,21 +96,27 @@ public class AccountServiceImplementation implements AccountService {
 	// Method for deposit amount from the existing account
 	@Transactional
 	@Override
-	public String depositAmount(int id, double depositAmount) {
+	public String depositAmount(int id, BigDecimal depositAmount) {
 		if (validateCustomer(id))
 			throw new GlobalCustomExceptions("Account Not Exist");
 		Account getExistUserDetails = accountRepository.findById(id).get();
-		double availableBalance = getExistUserDetails.getBalance();
-		if (depositAmount > 40000) {
+		BigDecimal availableBalance = getExistUserDetails.getBalance();
+		if (depositAmount.compareTo(new BigDecimal("40000")) > 0) {
 			throw new GlobalCustomExceptions("You can only deposit 40000 in a Day");
-		} else if (depositAmount <= 0) {
+		} else if (depositAmount.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new GlobalCustomExceptions("Please Enter Valid Amount");
 		}
-		double newBalance = depositAmount + availableBalance;
-		getExistUserDetails.setBalance(Math.round(newBalance));
+
+//		BigDecimal newBalance = depositAmount + availableBalance;
+		BigDecimal newBalance = availableBalance.add(depositAmount);
+		getExistUserDetails.setBalance(newBalance);
 		accountRepository.save(getExistUserDetails);
 
-		if (depositAmount == 111) {
+//		if (depositAmount == 111) {
+//			throw new RuntimeException();
+//		}
+
+		if (depositAmount.compareTo(new BigDecimal("111")) == 0) {
 			throw new RuntimeException();
 		}
 
