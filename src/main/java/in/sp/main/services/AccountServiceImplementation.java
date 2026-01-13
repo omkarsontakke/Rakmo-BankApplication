@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import in.sp.main.customeexception.GlobalCustomExceptions;
@@ -68,13 +70,20 @@ public class AccountServiceImplementation implements AccountService {
 	// Method for withdraw amount from the existing account
 	@Transactional
 	@Override
-	public String withdrawAmount(int id, BigDecimal withdrawAmount) {
+	public ResponseEntity<Object> withdrawAmount(int id, BigDecimal withdrawAmount) {
 
 		if(withdrawAmount.compareTo(BigDecimal.ZERO) < 0){
-			return "Please Enter positive Amount for withdrawal";
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please Enter positive Amount for withdrawal");
 		}
 		
-		Account getExistCustomerObj = accountRepository.findById(id).get();
+//		Account getExistCustomerObj = accountRepository.findById(id).get();
+		Optional<Account> optionalAccount = accountRepository.findById(id);
+		if (!optionalAccount.isPresent()) {
+			return ResponseEntity
+					.status(HttpStatus.NOT_FOUND)
+					.body("Account does not exist");
+		}
+		Account getExistCustomerObj = optionalAccount.get();
 
 		if (validateCustomer(id))
 			throw new GlobalCustomExceptions("Account Not Exist");
@@ -82,29 +91,38 @@ public class AccountServiceImplementation implements AccountService {
 		BigDecimal currentBalance = getExistCustomerObj.getBalance();
 
 		if (withdrawAmount.compareTo(currentBalance) > 0 || currentBalance.compareTo(BigDecimal.ZERO) == 0) {
-			return "Insufficient Balance";
+			return ResponseEntity
+					.status(HttpStatus.UNPROCESSABLE_ENTITY)
+					.body("Insufficient balance");
 		} else if (withdrawAmount.compareTo(BigDecimal.ZERO) == 0) {
-			return "Please Enter valid Amount";
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please Enter positive Amount for withdrawal");
 		}
 //		BigDecimal newBalance = currentBalance - withdrawAmount;
 		BigDecimal newBalance = currentBalance.subtract(withdrawAmount);
 		getExistCustomerObj.setBalance(newBalance);
 		accountRepository.save(getExistCustomerObj);
-		return "WithdrawAmount : " + withdrawAmount + " \n" + "New Balance : " + newBalance;
+
+		return ResponseEntity.status(HttpStatus.OK).body("WithdrawAmount : " + withdrawAmount + " \n" + "New Balance : " + newBalance);
+
 	}
 
 	// Method for deposit amount from the existing account
 	@Transactional
 	@Override
-	public String depositAmount(int id, BigDecimal depositAmount) {
+	public ResponseEntity<Object> depositAmount(int id, BigDecimal depositAmount) {
 		if (validateCustomer(id))
 			throw new GlobalCustomExceptions("Account Not Exist");
+
+		if(depositAmount.compareTo(BigDecimal.ZERO) < 0){
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please Enter positive Amount for withdrawal");
+		}
+
 		Account getExistUserDetails = accountRepository.findById(id).get();
 		BigDecimal availableBalance = getExistUserDetails.getBalance();
 		if (depositAmount.compareTo(new BigDecimal("40000")) > 0) {
-			throw new GlobalCustomExceptions("You can only deposit 40000 in a Day");
+			return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("You can only deposit 40,000 in a day");
 		} else if (depositAmount.compareTo(BigDecimal.ZERO) <= 0) {
-			throw new GlobalCustomExceptions("Please Enter Valid Amount");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please enter a valid amount");
 		}
 
 //		BigDecimal newBalance = depositAmount + availableBalance;
@@ -119,7 +137,15 @@ public class AccountServiceImplementation implements AccountService {
 		if (depositAmount.compareTo(new BigDecimal("111")) == 0) {
 			throw new RuntimeException();
 		}
+		return ResponseEntity.ok().body("Deposit Amount : " + depositAmount + ", " + "New Balance : " + newBalance);
+	}
 
-		return "Deposit Amount : " + depositAmount + ", " + "New Balance : " + newBalance;
+	@Override
+	public BigDecimal checkBalance(int id) {
+		if (validateCustomer(id))
+			throw new GlobalCustomExceptions("Account Not Exist");
+		Account getExistUserDetails = accountRepository.findById(id).get();
+		return getExistUserDetails.getBalance();
+
 	}
 }

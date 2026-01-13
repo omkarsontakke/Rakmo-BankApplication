@@ -6,6 +6,7 @@ import java.util.Optional;
 
 
 import in.sp.main.model.Account;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 
@@ -20,10 +21,11 @@ public interface AccountService {
 
 	public Account updateAccount(int id, Account account);
 
-	public String withdrawAmount(int id, BigDecimal WithdrawAmount);
+	public ResponseEntity<Object> withdrawAmount(int id, BigDecimal WithdrawAmount);
 
+	public ResponseEntity<Object> depositAmount(int id, BigDecimal depositAmount);
 
-	public String depositAmount(int id, BigDecimal depositAmount);
+	public BigDecimal checkBalance(int id);
 	
 	public boolean validateCustomer(int id);
 

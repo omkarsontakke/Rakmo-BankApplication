@@ -10,6 +10,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,7 +29,7 @@ class AccountServiceImplementationTest {
         Account account = new Account();
 
         account.setId(7);
-        account.setBalance(100);
+        account.setBalance(new BigDecimal(100));
         account.setAccountStatus("active");
         account.setAccountType("bank");
         account.setAccountHolderName("John Doe");

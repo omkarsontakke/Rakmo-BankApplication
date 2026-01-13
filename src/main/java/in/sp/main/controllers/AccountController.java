@@ -57,15 +57,25 @@ public class AccountController {
 	}
 	
 	@PutMapping("/withdraw/{id}/{amount}")
-	public String withdrawAmount(@PathVariable int id, @PathVariable BigDecimal amount) {
+	public ResponseEntity<Object> withdrawAmount(@PathVariable int id, @PathVariable BigDecimal amount) {
+//		return ResponseHandler.responseBuilder("Cash Withdraw Successfully",
+//				HttpStatus.OK, accountService.withdrawAmount(id, amount));
+
 		return accountService.withdrawAmount(id, amount);
 	}
 	
 	@PutMapping("/deposit/{id}/{amount}")
 	public ResponseEntity<Object> depositAmount(@PathVariable int id, @PathVariable BigDecimal amount) {
-		return ResponseHandler.responseBuilder("Cash Deposited Successfully",
-				HttpStatus.OK, accountService.depositAmount(id, amount));
+		return accountService.depositAmount(id, amount);
 		
+	}
+
+	@GetMapping("/checkBalance/{id}")
+	public ResponseEntity<Object> checkBalance(@PathVariable int id){
+		return ResponseHandler.responseBuilder("Balance Fetched Successfully",
+				HttpStatus.OK, accountService.checkBalance(id));
+
+//		return ResponseEntity.ok("");
 	}
 	
 }
