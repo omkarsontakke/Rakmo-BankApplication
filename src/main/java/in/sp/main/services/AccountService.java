@@ -29,5 +29,7 @@ public interface AccountService {
 	
 	public boolean validateCustomer(int id);
 
+	public ResponseEntity<Object> transferMoney(int fromId, int toId, BigDecimal amount);
+
 
 }

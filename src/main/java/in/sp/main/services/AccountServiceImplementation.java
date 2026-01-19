@@ -148,4 +148,29 @@ public class AccountServiceImplementation implements AccountService {
 		return getExistUserDetails.getBalance();
 
 	}
+
+	@Transactional
+	@Override
+	public ResponseEntity<Object> transferMoney(int fromId, int toId, BigDecimal amount) {
+
+		Account from = accountRepository.findById(fromId)
+				.orElseThrow(() -> new RuntimeException("From account not found"));
+
+		if (from.getBalance().compareTo(amount) < 0) {
+			throw new RuntimeException("Insufficient balance");
+		}
+
+		Account to = accountRepository.findById(toId)
+				.orElseThrow(() -> new RuntimeException("To account not found"));
+
+		from.setBalance(from.getBalance().subtract(amount));
+		to.setBalance(to.getBalance().add(amount));
+
+		accountRepository.save(from);
+		accountRepository.save(to);
+
+		return ResponseEntity.ok().body("Transfer Money from id " + fromId + " To" + toId + " Successfully");
+	}
+
+
 }
