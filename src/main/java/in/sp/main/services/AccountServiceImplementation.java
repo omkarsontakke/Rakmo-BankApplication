@@ -157,7 +157,7 @@ public class AccountServiceImplementation implements AccountService {
 				.orElseThrow(() -> new RuntimeException("From account not found"));
 
 		if (from.getBalance().compareTo(amount) < 0) {
-			throw new RuntimeException("Insufficient balance");
+			return ResponseEntity.badRequest().body("Insufficient balance " + fromId );
 		}
 
 		Account to = accountRepository.findById(toId)
@@ -167,6 +167,11 @@ public class AccountServiceImplementation implements AccountService {
 		to.setBalance(to.getBalance().add(amount));
 
 		accountRepository.save(from);
+		if (amount.compareTo(new BigDecimal("111")) == 0) {
+			throw new RuntimeException("Transaction Management Test");
+//			return ResponseEntity.badRequest().body("Transaction Management Test");
+		}
+
 		accountRepository.save(to);
 
 		return ResponseEntity.ok().body("Transfer Money from id " + fromId + " To" + toId + " Successfully");
