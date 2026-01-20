@@ -1,9 +1,13 @@
 package in.sp.main.services;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
+import in.sp.main.model.TransactionDetails;
+import in.sp.main.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +24,12 @@ public class AccountServiceImplementation implements AccountService {
 	@Autowired
 	private AccountRepository accountRepository;
 
+	@Autowired
+	private TransactionRepository txtDetailRepo;
+
+	@Autowired
+	TransactionDetails transactionDetails;
+
 	@Override
 	public boolean validateCustomer(int id) {
 		return accountRepository.findById(id).isEmpty();
@@ -29,6 +39,11 @@ public class AccountServiceImplementation implements AccountService {
 	@Override
 	public Account createAccount(Account account) {
 		return accountRepository.save(account);
+	}
+
+	@Override
+	public TransactionDetails paymentDetails(TransactionDetails transactionDetails) {
+		return txtDetailRepo.save(transactionDetails);
 	}
 
 	// Method to get account based on their id
@@ -152,30 +167,58 @@ public class AccountServiceImplementation implements AccountService {
 	@Transactional
 	@Override
 	public ResponseEntity<Object> transferMoney(int fromId, int toId, BigDecimal amount) {
+		String txtDetails = UUID.randomUUID().toString();
+
+		transactionDetails.setPaymentTxtId(txtDetails);
+		transactionDetails.setPaymentFromID(fromId);
+		transactionDetails.setPaymentToID(toId);
+		transactionDetails.setPaymentTransferAmount(amount);
+		transactionDetails.setPaymentTxtDate(Instant.now());
 
 		Account from = accountRepository.findById(fromId)
 				.orElseThrow(() -> new RuntimeException("From account not found"));
 
+		Account to = accountRepository.findById(toId)
+				.orElseThrow(() -> new RuntimeException("To account not found"));
+
 		if (from.getBalance().compareTo(amount) < 0) {
+			transactionDetails.setPaymentTxtStatus("FAILED");
+			transactionDetails.setPaymentStatusReason("Insufficient balance of sender");
+			transactionDetails.setPaymentFromName(from.getAccountHolderName());
+			transactionDetails.setPaymentToName(to.getAccountHolderName());
+			paymentDetails(transactionDetails);
 			return ResponseEntity.badRequest().body("Insufficient balance " + fromId );
 		}
 
-		Account to = accountRepository.findById(toId)
-				.orElseThrow(() -> new RuntimeException("To account not found"));
+
 
 		from.setBalance(from.getBalance().subtract(amount));
 		to.setBalance(to.getBalance().add(amount));
 
 		accountRepository.save(from);
 		if (amount.compareTo(new BigDecimal("111")) == 0) {
+			transactionDetails.setPaymentTxtStatus("FAILED");
+			transactionDetails.setPaymentStatusReason("Payment Failed Due to amount");
+			transactionDetails.setPaymentFromName(from.getAccountHolderName());
+			transactionDetails.setPaymentToName(to.getAccountHolderName());
+			paymentDetails(transactionDetails);
 			throw new RuntimeException("Transaction Management Test");
 //			return ResponseEntity.badRequest().body("Transaction Management Test");
 		}
-
 		accountRepository.save(to);
 
-		return ResponseEntity.ok().body("Transfer Money from id " + fromId + " To" + toId + " Successfully");
+		transactionDetails.setPaymentTxtStatus("SUCCESS");
+		transactionDetails.setPaymentStatusReason("Transfer Money from id " + fromId + " To" + toId + " Successfully");
+		transactionDetails.setPaymentFromName(from.getAccountHolderName());
+		transactionDetails.setPaymentToName(to.getAccountHolderName());
+
+		paymentDetails(transactionDetails);
+
+
+		return ResponseEntity.ok().body("Transfer Money from id :" + fromId + " To :" + toId + " Successfully");
 	}
+
+
 
 
 }

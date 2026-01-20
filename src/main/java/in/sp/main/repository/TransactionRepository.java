@@ -2,10 +2,6 @@ package in.sp.main.repository;
 
 import in.sp.main.model.TransactionDetails;
 import org.springframework.data.jpa.repository.JpaRepository;
-import in.sp.main.model.Account;
 
-public interface AccountRepository extends JpaRepository<Account, Integer> {
-	
+public interface TransactionRepository extends JpaRepository<TransactionDetails, String> {
 }
-
-

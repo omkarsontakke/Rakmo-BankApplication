@@ -4,12 +4,16 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
+import java.util.Date;
 
 @Entity
 @Table
+@Service
 public class TransactionDetails {
 
     @Id
@@ -21,6 +25,54 @@ public class TransactionDetails {
 
     @Column
     String paymentFromName;
+
+    @Column
+    int paymentFromID;
+
+    @Column
+    int paymentToID;
+
+    @Column
+    Instant paymentTxtDate;
+
+    @Column
+    String paymentStatusReason;
+
+    public Instant getPaymentTxtDate() {
+        return paymentTxtDate;
+    }
+
+    public void setPaymentTxtDate(Instant paymentTxtDate) {
+        this.paymentTxtDate = paymentTxtDate;
+    }
+
+    public String getPaymentStatusReason() {
+        return paymentStatusReason;
+    }
+
+    public void setPaymentStatusReason(String paymentStatusReason) {
+        this.paymentStatusReason = paymentStatusReason;
+    }
+
+
+
+    public int getPaymentFromID() {
+        return paymentFromID;
+    }
+
+    public void setPaymentFromID(int paymentFromID) {
+        this.paymentFromID = paymentFromID;
+    }
+
+    public int getPaymentToID() {
+        return paymentToID;
+    }
+
+    public void setPaymentToID(int paymentToID) {
+        this.paymentToID = paymentToID;
+    }
+
+
 
     @Column
     String paymentToName;

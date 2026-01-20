@@ -6,6 +6,7 @@ import java.util.Optional;
 
 
 import in.sp.main.model.Account;
+import in.sp.main.model.TransactionDetails;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
@@ -31,4 +32,5 @@ public interface AccountService {
 
 	public ResponseEntity<Object> transferMoney(int fromId, int toId, BigDecimal amount);
 
+	public TransactionDetails paymentDetails(TransactionDetails transactionDetails);
 }
