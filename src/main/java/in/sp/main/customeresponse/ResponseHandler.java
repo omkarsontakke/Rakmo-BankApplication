@@ -18,4 +18,15 @@ public class ResponseHandler {
 		
 		return new ResponseEntity<>(response, httpStatus);
 	}
+
+	public static ResponseEntity<Object> basicResponseBuilder(
+			String message, HttpStatus httpStatus
+	)
+	{
+		Map<String, Object> response = new HashMap<>();
+		response.put("HttpStatus", httpStatus);
+		response.put("message", message);
+
+		return new ResponseEntity<>(response, httpStatus);
+	}
 }

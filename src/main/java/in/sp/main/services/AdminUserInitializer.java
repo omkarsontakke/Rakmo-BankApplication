@@ -26,13 +26,13 @@ public class AdminUserInitializer {
 //                userRepository.save(admin);
 //                System.out.println("Default admin user created!");
 //            }
-            if (userRepository.findByUsername("user").isEmpty()) {
+            if (userRepository.findByUsername("omkar").isEmpty()) {
                 admin.setUsername("omkar");
                 admin.setPassword(passwordEncoder.encode("rakmo")); // Securely store password
                 admin.setRole("ROLE_USER");
 
                 userRepository.save(admin);
-                System.out.println("Default user created!");
+                System.out.println("Default user created! by CommandLineRunner");
             }
 
         };

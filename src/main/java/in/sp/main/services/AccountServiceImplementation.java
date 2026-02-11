@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import in.sp.main.customeexception.CustomerNotFoundException;
+import in.sp.main.customeexception.InsufficientBalanceException;
+import in.sp.main.customeexception.WrongAmountException;
 import in.sp.main.model.TransactionDetails;
 import in.sp.main.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +53,7 @@ public class AccountServiceImplementation implements AccountService {
 	@Override
 	public Optional<Account> getAccountByID(int id) {
 		if (validateCustomer(id))
-			throw new GlobalCustomExceptions("Requested User Is Not Exist");
+			throw new CustomerNotFoundException("Requested user is not exist");
 
 		return accountRepository.findById(id);
 	}
@@ -59,7 +62,7 @@ public class AccountServiceImplementation implements AccountService {
 	@Override
 	public List<Account> getAllAccountDetails() {
 		if (accountRepository.findAll().isEmpty())
-			throw new GlobalCustomExceptions("Data Not Found");
+			throw new CustomerNotFoundException("Requested data not found");
 		return accountRepository.findAll();
 	}
 
@@ -67,7 +70,7 @@ public class AccountServiceImplementation implements AccountService {
 	@Override
 	public void deleteAccountByID(int id) {
 		if (validateCustomer(id))
-			throw new GlobalCustomExceptions("User Not Exist");
+			throw new CustomerNotFoundException("Requested user is not exist");
 		accountRepository.deleteById(id);
 	}
 
@@ -76,7 +79,7 @@ public class AccountServiceImplementation implements AccountService {
 	public Account updateAccount(int id, Account account) {
 		Account userExistData = accountRepository.findById(id).get();
 		if (validateCustomer(id))
-			throw new GlobalCustomExceptions("Requested User Is Not Exist");
+			throw new CustomerNotFoundException("Requested user is not exist");
 
 		return accountRepository.save(userExistData);
 
@@ -87,35 +90,29 @@ public class AccountServiceImplementation implements AccountService {
 	@Override
 	public ResponseEntity<Object> withdrawAmount(int id, BigDecimal withdrawAmount) {
 
-		if(withdrawAmount.compareTo(BigDecimal.ZERO) < 0){
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please Enter positive Amount for withdrawal");
+		if(withdrawAmount.compareTo(BigDecimal.ZERO) <= 0){
+			throw new WrongAmountException("Please enter the positive amount");
 		}
-		
-//		Account getExistCustomerObj = accountRepository.findById(id).get();
-		Optional<Account> optionalAccount = accountRepository.findById(id);
-		if (!optionalAccount.isPresent()) {
-			return ResponseEntity
-					.status(HttpStatus.NOT_FOUND)
-					.body("Account does not exist");
-		}
-		Account getExistCustomerObj = optionalAccount.get();
 
-		if (validateCustomer(id))
-			throw new GlobalCustomExceptions("Account Not Exist");
+		Optional<Account> accountDetails = accountRepository.findById(id);
+		if (!accountDetails.isPresent()) {
+			throw new CustomerNotFoundException("Requested user is not exist");
+		}
+		Account getExistCustomerObj = accountDetails.get();
 
 		BigDecimal currentBalance = getExistCustomerObj.getBalance();
 
-		if (withdrawAmount.compareTo(currentBalance) > 0 || currentBalance.compareTo(BigDecimal.ZERO) == 0) {
-			return ResponseEntity
-					.status(HttpStatus.UNPROCESSABLE_ENTITY)
-					.body("Insufficient balance");
-		} else if (withdrawAmount.compareTo(BigDecimal.ZERO) == 0) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please Enter positive Amount for withdrawal");
+		if (withdrawAmount.compareTo(currentBalance) > 0 ){
+			throw new InsufficientBalanceException("Insufficient balance");
 		}
-//		BigDecimal newBalance = currentBalance - withdrawAmount;
+
 		BigDecimal newBalance = currentBalance.subtract(withdrawAmount);
 		getExistCustomerObj.setBalance(newBalance);
 		accountRepository.save(getExistCustomerObj);
+
+		if (withdrawAmount.compareTo(new BigDecimal(111)) == 0) {
+			throw new RuntimeException();
+		}
 
 		return ResponseEntity.status(HttpStatus.OK).body("WithdrawAmount : " + withdrawAmount + " \n" + "New Balance : " + newBalance);
 
@@ -126,18 +123,18 @@ public class AccountServiceImplementation implements AccountService {
 	@Override
 	public ResponseEntity<Object> depositAmount(int id, BigDecimal depositAmount) {
 		if (validateCustomer(id))
-			throw new GlobalCustomExceptions("Account Not Exist");
+			throw new CustomerNotFoundException("Account Not Exist");
 
 		if(depositAmount.compareTo(BigDecimal.ZERO) < 0){
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please Enter positive Amount for withdrawal");
+			throw new WrongAmountException("Please Enter positive Amount for withdrawal");
 		}
 
 		Account getExistUserDetails = accountRepository.findById(id).get();
 		BigDecimal availableBalance = getExistUserDetails.getBalance();
-		if (depositAmount.compareTo(new BigDecimal("40000")) > 0) {
-			return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("You can only deposit 40,000 in a day");
-		} else if (depositAmount.compareTo(BigDecimal.ZERO) <= 0) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please enter a valid amount");
+		if (depositAmount.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new WrongAmountException("Please enter a valid amount");
+		}else if (depositAmount.compareTo(new BigDecimal("40000")) > 0) {
+			throw new WrongAmountException("You can only deposit 40,000 in a day");
 		}
 
 //		BigDecimal newBalance = depositAmount + availableBalance;
@@ -158,7 +155,7 @@ public class AccountServiceImplementation implements AccountService {
 	@Override
 	public BigDecimal checkBalance(int id) {
 		if (validateCustomer(id))
-			throw new GlobalCustomExceptions("Account Not Exist");
+			throw new CustomerNotFoundException("Account Not Exist");
 		Account getExistUserDetails = accountRepository.findById(id).get();
 		return getExistUserDetails.getBalance();
 
@@ -176,10 +173,10 @@ public class AccountServiceImplementation implements AccountService {
 		transactionDetails.setPaymentTxtDate(Instant.now());
 
 		Account from = accountRepository.findById(fromId)
-				.orElseThrow(() -> new RuntimeException("From account not found"));
+				.orElseThrow(() -> new CustomerNotFoundException("From account not found"));
 
 		Account to = accountRepository.findById(toId)
-				.orElseThrow(() -> new RuntimeException("To account not found"));
+				.orElseThrow(() -> new CustomerNotFoundException("To account not found"));
 
 		if (from.getBalance().compareTo(amount) < 0) {
 			transactionDetails.setPaymentTxtStatus("FAILED");
