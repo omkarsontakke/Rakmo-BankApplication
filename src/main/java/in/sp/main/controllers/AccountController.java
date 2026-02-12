@@ -1,6 +1,8 @@
 package in.sp.main.controllers;
 
 import in.sp.main.Util.TransferRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,19 +26,23 @@ import java.math.RoundingMode;
 @RestController
 @RequestMapping("/api/account")
 public class AccountController {
-	
+
+	private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
+
 	@Autowired
 	private AccountService accountService;
 
 	// Endpoint for creating the new customer in the database
 	@PostMapping
 	public Account createCustomerAccount(@RequestBody Account account) {
+		logger.info("Inside create account API");
 		return accountService.createAccount(account);
 	}
 
 	// Endpoint for getting customer by id
 	@GetMapping("/{id}")
 	public ResponseEntity<Object> getAccountDetailsByID(@PathVariable int id) {
+		logger.info("Inside get account details by id API");
 		return ResponseHandler.responseBuilder("Requested Data are given here",
 				HttpStatus.OK, accountService.getAccountByID(id));
 		
@@ -45,15 +51,15 @@ public class AccountController {
 	// Endpoint for getting all customers
 	@GetMapping("/getAllAccountDetails")
 	public ResponseEntity<Object> getAllAccountDetails() {
+		logger.info("Inside get all account details API");
 		return ResponseHandler.responseBuilder("All Accounts Details are give here",
 				HttpStatus.OK, accountService.getAllAccountDetails());
 	}
 
 	// Endpoint for Delete existing customer
 	@DeleteMapping("/{id}")
-	public String deleteAccountById(@PathVariable int id) {
-		accountService.deleteAccountByID(id);
-		return "Account Deleted Successfully";
+	public ResponseEntity<Object> deleteAccountById(@PathVariable int id) {
+		return accountService.deleteAccountByID(id);
 	}
 	
 	//Updating full object and save it 
@@ -65,17 +71,13 @@ public class AccountController {
 	// Endpoint for Withdraw the amount from the existing customer
 	@PutMapping("/withdraw/{id}/{amount}")
 	public ResponseEntity<Object> withdrawAmount(@PathVariable int id, @PathVariable BigDecimal amount) {
-//		return ResponseHandler.responseBuilder("Cash Withdraw Successfully",
-//				HttpStatus.OK, accountService.withdrawAmount(id, amount));
-
-		return accountService.withdrawAmount(id, amount);
+		return accountService.withdrawAmount(id, amount.setScale(2, RoundingMode.UP));
 	}
 
 	// Endpoint for Deposit the amount in the existing customer
 	@PutMapping("/deposit/{id}/{amount}")
 	public ResponseEntity<Object> depositAmount(@PathVariable int id, @PathVariable BigDecimal amount) {
 		return accountService.depositAmount(id, amount.setScale(2, RoundingMode.UP));
-		
 	}
 
 	// Endpoint for the Checking balance of the existing customer
@@ -93,7 +95,7 @@ public class AccountController {
 	@PostMapping("/transfer")
 	public ResponseEntity<Object> transferMoney(@RequestBody TransferRequest transferRequest){
 
-		return ResponseHandler.responseBuilder("Balance Fetched Successfully",
+		return ResponseHandler.responseBuilder("Money transfer successfully",
 				HttpStatus.OK, accountService.transferMoney(
 						transferRequest.getFromAccountId(),
 						transferRequest.getToAccountId(),
