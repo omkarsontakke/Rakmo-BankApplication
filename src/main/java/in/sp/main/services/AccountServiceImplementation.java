@@ -7,19 +7,18 @@ import java.util.Optional;
 import java.util.UUID;
 
 import in.sp.main.controllers.AccountController;
-import in.sp.main.customeexception.CustomerNotFoundException;
-import in.sp.main.customeexception.InsufficientBalanceException;
-import in.sp.main.customeexception.WrongAmountException;
+import in.sp.main.customeexception.*;
+import in.sp.main.customeresponse.ResponseHandler;
 import in.sp.main.model.TransactionDetails;
 import in.sp.main.repository.TransactionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import in.sp.main.customeexception.GlobalCustomExceptions;
 import in.sp.main.model.Account;
 import in.sp.main.repository.AccountRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class AccountServiceImplementation implements AccountService {
 
 	private static final Logger logger = LoggerFactory.getLogger(AccountServiceImplementation.class);
+	private static final BigDecimal DAILY_DEPOSIT_LIMIT = BigDecimal.valueOf(40_000);
+
 
 
 	@Autowired
@@ -46,7 +47,7 @@ public class AccountServiceImplementation implements AccountService {
 
 		Account accountDetails = accountRepository.findById(id)
 				.orElseThrow( () -> {
-					logger.error("Customer not exist for the id: {}", id);
+					logger.info("Customer not exist for the id: {}", id);
 					return new CustomerNotFoundException("Customer not exist for id: " + id);
 				});
 
@@ -71,6 +72,14 @@ public class AccountServiceImplementation implements AccountService {
 		return txtDetailRepo.save(transactionDetails);
 	}
 
+	@Override
+	public ResponseEntity<Object> deleteCustomerById(int id) {
+
+
+
+		return null;
+	}
+
 	// Method to get account based on their id
 	@Override
 	public Account getAccountByID(int id) {
@@ -92,18 +101,27 @@ public class AccountServiceImplementation implements AccountService {
 	// Method for deleting the account based on customer id
 	@Override
 	public ResponseEntity<Object> deleteAccountByID(int id) {
-		validateCustomer(id);
 
-		accountRepository.deleteById(id);
-		return ResponseEntity.status(HttpStatus.OK).body("Successfully delete customer account with id : "+id);
+		logger.info("Initiating the delete request for id : {}" ,id);
+
+		int deleteAccount =  accountRepository.deleteAccountById(id);
+
+		if(deleteAccount == 0){
+			logger.info("Customer not exist for id : "+id);
+			throw new CustomerNotFoundException("Customer account not found with id: " + id);
+		}
+
+		logger.info("Account delete successfully for the id : "+id);
+		return ResponseEntity.noContent().build();
+
 	}
 
 	// Method for updating the existing user details
 	@Override
 	public Account updateAccount(int id, Account account) {
-		Account userExistData = accountRepository.findById(id).orElseThrow(() -> new CustomerNotFoundException("Requested user is not exist"));
+		validateCustomer(id);
 		logger.info("Account update successfully for the id : {}",id);
-		return accountRepository.save(userExistData);
+		return accountRepository.save(account);
 
 	}
 
@@ -114,14 +132,12 @@ public class AccountServiceImplementation implements AccountService {
 
 		logger.info("Inside Withdraw method for id : {}",id);
 
-		Account getExistCustomerObj = accountRepository.findById(id)
-				.orElseThrow( () -> new CustomerNotFoundException("Account not found with id: " + id));
-
-		if(withdrawAmount.compareTo(BigDecimal.ZERO) <= 0){
+		if(withdrawAmount.signum() <= 0){
 			logger.info("Amount can not negative or zero");
 			throw new WrongAmountException("Please enter the positive amount");
 		}
 
+		Account getExistCustomerObj = validateCustomer(id);
 
 		BigDecimal currentBalance = getExistCustomerObj.getBalance();
 
@@ -133,10 +149,6 @@ public class AccountServiceImplementation implements AccountService {
 		BigDecimal newBalance = currentBalance.subtract(withdrawAmount);
 		getExistCustomerObj.setBalance(newBalance);
 		accountRepository.save(getExistCustomerObj);
-
-		if (withdrawAmount.compareTo(new BigDecimal(111)) == 0) {
-			throw new RuntimeException();
-		}
 
 		logger.info("Withdraw money successfully for the customer id : {}",id);
 		return ResponseEntity.status(HttpStatus.OK).body("WithdrawAmount : " + withdrawAmount + " \n" + "New Balance : " + newBalance);
@@ -150,31 +162,24 @@ public class AccountServiceImplementation implements AccountService {
 
 		logger.info("Deposit the amount for account id : {} ",id);
 
-		if(depositAmount.compareTo(BigDecimal.ZERO) <= 0){
-			logger.info("Amount can not negative or zero");
+
+		if(depositAmount == null ||  depositAmount.signum() <= 0){
+			logger.info("Amount can't negative or zero");
 			throw new WrongAmountException("Please Enter positive Amount for Deposit");
 		}
-
-		Account getExistUserDetails = accountRepository.findById(id).orElseThrow(() -> new CustomerNotFoundException("Account Not Exist for id :"+id));
-		BigDecimal availableBalance = getExistUserDetails.getBalance();
-
-		if (depositAmount.compareTo(new BigDecimal("40000")) > 0) {
+		if (depositAmount.compareTo(DAILY_DEPOSIT_LIMIT) > 0) {
 			logger.info("Customer with id: {} can only deposit 40000 per day",id);
 			throw new WrongAmountException("You can only deposit 40,000 in a day");
 		}
 
-//		BigDecimal newBalance = depositAmount + availableBalance;
+		Account getExistUserDetails = validateCustomer(id);
+
+		BigDecimal availableBalance = getExistUserDetails.getBalance();
+
 		BigDecimal newBalance = availableBalance.add(depositAmount);
 		getExistUserDetails.setBalance(newBalance);
 		accountRepository.save(getExistUserDetails);
 
-//		if (depositAmount == 111) {
-//			throw new RuntimeException();
-//		}
-
-		if (depositAmount.compareTo(new BigDecimal("111")) == 0) {
-			throw new RuntimeException();
-		}
 
 		logger.info("Deposit money successfully for the customer id : {}",id);
 		return ResponseEntity.ok().body("Deposit Amount : " + depositAmount + ", " + "New Balance : " + newBalance);
@@ -183,23 +188,33 @@ public class AccountServiceImplementation implements AccountService {
 	@Override
 	public BigDecimal checkBalance(int id) {
 		logger.info("Fetching the balance for the id : {}",id);
-		Account getExistUserDetails = accountRepository.findById(id).orElseThrow(() -> new CustomerNotFoundException("Account Not Exist for id :"+id));;
-		logger.info("Balance fetech successfully for the customer id : {}", id);
+		Account getExistUserDetails = validateCustomer(id);
+		logger.info("Balance fetch successfully for the customer id : {}", id);
 		return getExistUserDetails.getBalance();
 
+	}
+
+	private TransactionDetails createTransactionRecord(String txnId, Account from, Account to,
+													   BigDecimal amount, String status, String reason) {
+		TransactionDetails txn = new TransactionDetails();
+		txn.setPaymentTxtId(txnId);
+		txn.setPaymentFromID(from.getId());
+		txn.setPaymentToID(to.getId());
+		txn.setPaymentTransferAmount(amount);
+		txn.setPaymentTxtDate(Instant.now());
+		txn.setPaymentTxtStatus(status);
+		txn.setPaymentStatusReason(reason);
+		txn.setPaymentFromName(from.getAccountHolderName());
+		txn.setPaymentToName(to.getAccountHolderName());
+		return txn;
 	}
 
 	@Transactional
 	@Override
 	public ResponseEntity<Object> transferMoney(int fromId, int toId, BigDecimal amount) {
 		logger.info("Generating transaction unique id");
-		String txtDetails = UUID.randomUUID().toString();
-
-		transactionDetails.setPaymentTxtId(txtDetails);
-		transactionDetails.setPaymentFromID(fromId);
-		transactionDetails.setPaymentToID(toId);
-		transactionDetails.setPaymentTransferAmount(amount);
-		transactionDetails.setPaymentTxtDate(Instant.now());
+		String txtDetailsID = UUID.randomUUID().toString();
+		Instant instantTime = Instant.now();
 
 		logger.info("Fetching FROM account customer details");
 		Account from = accountRepository.findById(fromId)
@@ -209,40 +224,28 @@ public class AccountServiceImplementation implements AccountService {
 		Account to = accountRepository.findById(toId)
 				.orElseThrow(() -> new CustomerNotFoundException("To account not found"));
 
+
 		logger.info("Checking balance for the FROM customer");
 		if (from.getBalance().compareTo(amount) < 0) {
-			transactionDetails.setPaymentTxtStatus("FAILED");
-			transactionDetails.setPaymentStatusReason("Insufficient balance of sender");
-			transactionDetails.setPaymentFromName(from.getAccountHolderName());
-			transactionDetails.setPaymentToName(to.getAccountHolderName());
-			paymentDetails(transactionDetails);
+			TransactionDetails failedTxn = createTransactionRecord(txtDetailsID, from, to, amount, "FAILED",
+					"Insufficient balance of sender");
+			paymentDetails(failedTxn);
 			return ResponseEntity.badRequest().body("Insufficient balance " + fromId );
 		}
 
 
+		// Update balance.
 		logger.info("Subtracting the balance of FROM customer");
 		from.setBalance(from.getBalance().subtract(amount));
 		to.setBalance(to.getBalance().add(amount));
-		accountRepository.save(from);
 
-		if (amount.compareTo(new BigDecimal("111")) == 0) {
-			transactionDetails.setPaymentTxtStatus("FAILED");
-			transactionDetails.setPaymentStatusReason("Payment Failed Due to amount");
-			transactionDetails.setPaymentFromName(from.getAccountHolderName());
-			transactionDetails.setPaymentToName(to.getAccountHolderName());
-			paymentDetails(transactionDetails);
-			throw new RuntimeException("Transaction Management Test");
-//			return ResponseEntity.badRequest().body("Transaction Management Test");
-		}
-		accountRepository.save(to);
+//		accountRepository.saveAll(List.of(to,from));
 
-		transactionDetails.setPaymentTxtStatus("SUCCESS");
-		transactionDetails.setPaymentStatusReason("Transfer Money from id " + fromId + " To" + toId + " Successfully");
-		transactionDetails.setPaymentFromName(from.getAccountHolderName());
-		transactionDetails.setPaymentToName(to.getAccountHolderName());
+		TransactionDetails successTxn = createTransactionRecord(txtDetailsID, from, to, amount, "SUCCESS",
+				"Transfer successful");
 
 		logger.info("Saving transaction details for the request");
-		paymentDetails(transactionDetails);
+		paymentDetails(successTxn);
 		logger.info("Transaction details save for request");
 
 		logger.info("Transfer money request success");

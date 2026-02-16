@@ -33,4 +33,6 @@ public interface AccountService {
 	public ResponseEntity<Object> transferMoney(int fromId, int toId, BigDecimal amount);
 
 	public TransactionDetails paymentDetails(TransactionDetails transactionDetails);
+
+	public ResponseEntity<Object> deleteCustomerById(int id);
 }
