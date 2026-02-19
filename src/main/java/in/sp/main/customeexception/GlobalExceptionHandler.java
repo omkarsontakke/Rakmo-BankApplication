@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-	@ExceptionHandler(value = {CustomerNotFoundException.class})
+	@ExceptionHandler(value = {AccountNotFoundException.class})
 	public ResponseEntity<Object> customerNotFoundException
-	(CustomerNotFoundException customerNotFoundException){
+	(AccountNotFoundException customerNotFoundException){
 		GlobalException customerException = new GlobalException
 				(	customerNotFoundException.getMessage(),
 					customerNotFoundException.getCause(),

@@ -3,18 +3,14 @@ package in.sp.main.services;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-import in.sp.main.controllers.AccountController;
 import in.sp.main.customeexception.*;
-import in.sp.main.customeresponse.ResponseHandler;
 import in.sp.main.model.TransactionDetails;
 import in.sp.main.repository.TransactionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -48,7 +44,7 @@ public class AccountServiceImplementation implements AccountService {
 		Account accountDetails = accountRepository.findById(id)
 				.orElseThrow( () -> {
 					logger.info("Customer not exist for the id: {}", id);
-					return new CustomerNotFoundException("Customer not exist for id: " + id);
+					return new AccountNotFoundException("Customer not exist for id: " + id);
 				});
 
 		logger.info("Customer id: {} validate successfully.", id);
@@ -92,7 +88,7 @@ public class AccountServiceImplementation implements AccountService {
 	public List<Account> getAllAccountDetails() {
 		if (accountRepository.findAll().isEmpty()) {
 			logger.error("Customers not present in the database");
-			throw new CustomerNotFoundException("Requested data not found");
+			throw new AccountNotFoundException("Requested data not found");
 		}
 		logger.info("Fetch the all accounts details");
 		return accountRepository.findAll();
@@ -108,7 +104,7 @@ public class AccountServiceImplementation implements AccountService {
 
 		if(deleteAccount == 0){
 			logger.info("Customer not exist for id : "+id);
-			throw new CustomerNotFoundException("Customer account not found with id: " + id);
+			throw new AccountNotFoundException("Customer account not found with id: " + id);
 		}
 
 		logger.info("Account delete successfully for the id : "+id);
@@ -216,13 +212,23 @@ public class AccountServiceImplementation implements AccountService {
 		String txtDetailsID = UUID.randomUUID().toString();
 		Instant instantTime = Instant.now();
 
+		if (fromId == toId) {
+			logger.info("Can't transfer money from {} to the same account id {}",fromId,toId);
+			throw new WrongAmountException("Can't transfer money from to the same account");
+		}
+
+		if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new WrongAmountException("You can only transfer amount greater than zero");
+		}
+
+
 		logger.info("Fetching FROM account customer details");
 		Account from = accountRepository.findById(fromId)
-				.orElseThrow(() -> new CustomerNotFoundException("From account not found"));
+				.orElseThrow(() -> new AccountNotFoundException("From account not found"));
 
 		logger.info("Fetching TO account customer details");
 		Account to = accountRepository.findById(toId)
-				.orElseThrow(() -> new CustomerNotFoundException("To account not found"));
+				.orElseThrow(() -> new AccountNotFoundException("To account not found"));
 
 
 		logger.info("Checking balance for the FROM customer");
@@ -239,7 +245,7 @@ public class AccountServiceImplementation implements AccountService {
 		from.setBalance(from.getBalance().subtract(amount));
 		to.setBalance(to.getBalance().add(amount));
 
-//		accountRepository.saveAll(List.of(to,from));
+//		accountRepository.saveAll(List.of(to,from)); // Transaction will automatically save the object
 
 		TransactionDetails successTxn = createTransactionRecord(txtDetailsID, from, to, amount, "SUCCESS",
 				"Transfer successful");
